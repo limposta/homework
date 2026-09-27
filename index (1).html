@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우진이 숙제 노트</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2E7D5B">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --paper:#FCFDF9; --ink:#1F2A24; --muted:#6B776F; --grid:#9CCBB2; --grid-soft:#DCEEE3;
+  --green:#2E7D5B; --red:#D8413A; --red-soft:#FBE3E1; --panel:#FFFFFF; --line:#D5E2D9;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#18201C; --ink:#E8EFEA; --muted:#9AA8A0; --grid:#3E6A55; --grid-soft:#26352D;
+    --green:#6CC39A; --red:#F0675F; --red-soft:#3A2321; --panel:#1E2823; --line:#2F3E36;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#18201C; --ink:#E8EFEA; --muted:#9AA8A0; --grid:#3E6A55; --grid-soft:#26352D;
+  --green:#6CC39A; --red:#F0675F; --red-soft:#3A2321; --panel:#1E2823; --line:#2F3E36;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:17px;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 48px}
+h1{font-family:"Jua","Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0 0 6px;color:var(--green)}
+.sub{margin:0 0 26px;color:var(--muted)}
+
+.rec{display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+#micBtn{width:96px;height:96px;border-radius:50%;border:4px solid var(--red);background:var(--panel);cursor:pointer;display:grid;place-items:center;flex:none;transition:transform .15s}
+#micBtn:hover{transform:scale(1.04)}
+#micBtn:focus-visible{outline:3px solid var(--green);outline-offset:4px}
+#micBtn .dot{width:42px;height:42px;border-radius:50%;background:var(--red);transition:all .2s}
+#micBtn.on{background:var(--red-soft)}
+#micBtn.on .dot{width:34px;height:34px;border-radius:8px}
+#micBtn.on{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--red) 45%,transparent)}50%{box-shadow:0 0 0 14px transparent}}
+@media (prefers-reduced-motion:reduce){#micBtn.on{animation:none}}
+.recText{flex:1;min-width:200px}
+#status{font-family:"Jua",sans-serif;font-size:22px;margin:0}
+#hint{margin:2px 0 0;color:var(--muted);font-size:15px}
+.lang{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin-top:8px}
+.lang button{border:0;background:transparent;color:var(--muted);padding:4px 14px;font:inherit;font-size:14px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--green);color:var(--paper)}
+
+label.t{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+#title{width:100%;font-family:"Jua",sans-serif;font-size:24px;border:0;border-bottom:3px solid var(--green);background:transparent;color:var(--ink);padding:4px 2px;margin-bottom:14px}
+#title:focus{outline:none;border-bottom-color:var(--red)}
+
+.sheet{position:relative;border:2px solid var(--grid);border-radius:6px;background:var(--panel)}
+#text{display:block;width:100%;min-height:340px;resize:vertical;border:0;background:transparent;color:var(--ink);font:inherit;font-size:19px;line-height:36px;padding:6px 16px 18px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,var(--grid-soft) 35px,var(--grid-soft) 36px);background-attachment:local;background-position:0 6px}
+#text:focus{outline:none}
+.sheet:focus-within{border-color:var(--green)}
+#interim{min-height:0;padding:0 16px;color:var(--muted);font-size:17px}
+#interim:not(:empty){padding:8px 16px 12px;border-top:1px dashed var(--grid)}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin:6px 2px 18px}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:inherit;font-size:16px;padding:11px 18px;border-radius:10px;border:2px solid var(--green);background:transparent;color:var(--green);cursor:pointer}
+.btn.primary{background:var(--green);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+#msg{margin:14px 2px 0;min-height:1.6em;font-size:15px}
+#msg.err{color:var(--red)}
+#msg.ok{color:var(--green)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>우진이 숙제 노트</h1>
+  <p class="sub">빨간 버튼을 누르고 말하면 아래 원고지에 글이 써져요. 다 말했으면 읽어 보고 고친 다음 워드 파일로 저장하세요.</p>
+
+  <section class="rec">
+    <button id="micBtn" type="button" aria-label="녹음 시작"><span class="dot"></span></button>
+    <div class="recText">
+      <p id="status">눌러서 말하기</p>
+      <p id="hint">천천히, 또박또박 말하면 더 정확해요.</p>
+      <div class="lang" role="group" aria-label="말하는 언어">
+        <button type="button" data-lang="ko-KR" aria-pressed="true">한국어</button>
+        <button type="button" data-lang="en-US" aria-pressed="false">English</button>
+      </div>
+    </div>
+  </section>
+
+  <label class="t" for="title">제목</label>
+  <input id="title" type="text" placeholder="숙제 제목을 적어요" autocomplete="off">
+
+  <div class="sheet">
+    <textarea id="text" aria-label="받아쓴 글" placeholder="여기에 말한 내용이 적혀요. 손으로 고쳐도 돼요."></textarea>
+    <div id="interim" aria-live="polite"></div>
+  </div>
+  <div class="meta"><span id="count">0자</span><span id="saved"></span></div>
+
+  <div class="actions">
+    <button class="btn" id="polishBtn" type="button">말버릇 지우기</button>
+    <button class="btn hidden" id="undoBtn" type="button">지우기 전으로</button>
+    <button class="btn primary" id="docxBtn" type="button">워드 파일로 저장</button>
+    <button class="btn" id="copyBtn" type="button">글 복사</button>
+    <button class="btn ghost" id="clearBtn" type="button">새로 쓰기</button>
+  </div>
+  <p id="msg" role="status"></p>
+</main>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const micBtn=$('#micBtn'), statusEl=$('#status'), hintEl=$('#hint'), text=$('#text'), interim=$('#interim'),
+        title=$('#title'), countEl=$('#count'), savedEl=$('#saved'), msg=$('#msg'),
+        polishBtn=$('#polishBtn'), undoBtn=$('#undoBtn'), docxBtn=$('#docxBtn'), copyBtn=$('#copyBtn'), clearBtn=$('#clearBtn');
+
+  let lang='ko-KR', recognizing=false, wantOn=false, rec=null, beforePolish=null;
+  
+  function say(t,kind){ msg.textContent=t||''; msg.className=kind||''; }
+  function updateCount(){ const n=text.value.replace(/\s/g,'').length; countEl.textContent=`${n}자 (띄어쓰기 빼고) · 공백 포함 ${text.value.length}자`; }
+
+  // ---- draft storage ----
+  const KEY='voice-homework-draft';
+  function load(){ try{ const d=JSON.parse(localStorage.getItem(KEY)||'null'); if(d){ text.value=d.text||''; title.value=d.title||''; } }catch(e){} updateCount(); }
+  let saveT;
+  function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ localStorage.setItem(KEY,JSON.stringify({text:text.value,title:title.value})); savedEl.textContent='자동 저장됨'; }catch(e){} },400); }
+  text.addEventListener('input',()=>{updateCount();save();});
+  title.addEventListener('input',save);
+  load();
+
+  // ---- language toggle ----
+  document.querySelectorAll('.lang button').forEach(b=>b.addEventListener('click',()=>{
+    lang=b.dataset.lang;
+    document.querySelectorAll('.lang button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+    if(recognizing){ stopRec(); setTimeout(startRec,300); }
+  }));
+
+  // ---- speech recognition ----
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    micBtn.disabled=true; micBtn.style.opacity=.4;
+    statusEl.textContent='이 브라우저는 음성 인식이 안 돼요';
+    hintEl.textContent='크롬(Chrome) 앱에서 열어 주세요. 그동안은 아래에 직접 써도 돼요.';
+  }
+
+  function appendText(t){
+    t=t.trim(); if(!t) return;
+    const v=text.value;
+    const sep = v && !/[\s]$/.test(v) ? ' ' : '';
+    text.value = v + sep + t;
+    text.scrollTop = text.scrollHeight;
+    updateCount(); save();
+  }
+
+  const IS_ANDROID=/Android/i.test(navigator.userAgent);
+  let lastFinal='', lastFinalAt=0;
+  function commitFinal(t){
+    const clean=t.trim(); if(!clean) return;
+    const now=Date.now();
+    // 같은 말이 3초 안에 다시 들어오면 중복으로 보고 버린다
+    if(clean===lastFinal && now-lastFinalAt<3000) return;
+    lastFinal=clean; lastFinalAt=now;
+    appendText(clean);
+  }
+
+  function startRec(){
+    if(!SR) return;
+    rec=new SR(); rec.lang=lang; rec.interimResults=true;
+    // 안드로이드 크롬은 연속 모드에서 같은 문장을 여러 번 돌려주는 문제가 있어서
+    // 한 문장씩 듣고 자동으로 다시 시작하는 방식으로 동작시킨다.
+    rec.continuous=!IS_ANDROID;
+    let committed=false; const done=new Set();
+    rec.onstart=()=>{ recognizing=true; committed=false; micBtn.classList.add('on'); micBtn.setAttribute('aria-label','녹음 멈추기'); statusEl.textContent='듣고 있어요…'; hintEl.textContent='다 말했으면 버튼을 다시 눌러요.'; say(''); };
+    rec.onresult=(e)=>{
+      if(IS_ANDROID){
+        const r=e.results[e.results.length-1]; const t=r[0].transcript;
+        if(r.isFinal){ if(!committed){ commitFinal(t); committed=true; } interim.textContent=''; }
+        else interim.textContent=t;
+        return;
+      }
+      let tmp='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i];
+        if(r.isFinal){ if(!done.has(i)){ done.add(i); commitFinal(r[0].transcript); } }
+        else tmp+=r[0].transcript;
+      }
+      interim.textContent=tmp;
+    };
+    rec.onerror=(e)=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+        wantOn=false;
+        say('마이크를 쓸 수 없어요. 브라우저 주소창 옆의 마이크 권한을 “허용”으로 바꾼 뒤 다시 눌러 주세요.','err');
+      } else if(e.error==='audio-capture'){
+        wantOn=false; say('마이크를 찾지 못했어요. 마이크가 연결돼 있는지 확인해 주세요.','err');
+      } else if(e.error==='network'){
+        wantOn=false; say('인터넷 연결이 필요해요. 연결을 확인하고 다시 눌러 주세요.','err');
+      }
+    };
+    rec.onend=()=>{
+      recognizing=false; interim.textContent='';
+      if(wantOn){ try{ rec.start(); }catch(_){ setIdle(); } } else setIdle();
+    };
+    try{ rec.start(); }catch(e){ say('녹음을 시작하지 못했어요. 잠시 뒤 다시 눌러 주세요.','err'); }
+  }
+  function stopRec(){ wantOn=false; if(rec){ try{ rec.stop(); }catch(_){} } }
+  function setIdle(){ micBtn.classList.remove('on'); micBtn.setAttribute('aria-label','녹음 시작'); statusEl.textContent='눌러서 말하기'; hintEl.textContent='이어서 말하려면 다시 누르면 돼요.'; }
+
+  micBtn.addEventListener('click',()=>{ if(wantOn||recognizing){ stopRec(); } else { wantOn=true; startRec(); } });
+
+  // ---- filler cleanup (no AI, runs on the tablet) ----
+  function cleanFillers(t){
+    return t
+      .replace(/(^|[\s,])(음+|어+|으음+|흠+|아+|에+|그니까|그러니까요|뭐지|막|약간)(?=[\s,.?!]|$)/g,'$1')
+      .replace(/(^|\s)(\S+)(\s+\2)+(?=\s|$)/g,'$1$2')
+      .replace(/[ \t]{2,}/g,' ')
+      .replace(/ +([,.?!])/g,'$1')
+      .replace(/^ +| +$/gm,'');
+  }
+  polishBtn.addEventListener('click',()=>{
+    const src=text.value;
+    if(!src.trim()){ say('먼저 말하거나 글을 써 주세요.','err'); return; }
+    if(recognizing) stopRec();
+    const out=cleanFillers(src);
+    if(out===src){ say('지울 말버릇이 없어요.','ok'); return; }
+    beforePolish={text:src,title:title.value};
+    text.value=out; updateCount(); save();
+    undoBtn.classList.remove('hidden');
+    say('“음, 어” 같은 말버릇과 반복된 말을 지웠어요. 한 번 읽어 보고 이상한 곳은 직접 고쳐요.','ok');
+  });
+
+  undoBtn.addEventListener('click',()=>{
+    if(!beforePolish) return;
+    text.value=beforePolish.text; title.value=beforePolish.title; beforePolish=null;
+    undoBtn.classList.add('hidden'); updateCount(); save(); say('지우기 전 글로 돌려놨어요.','ok');
+  });
+
+  // ---- DOCX ----
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const FONT='<w:rFonts w:ascii="Malgun Gothic" w:hAnsi="Malgun Gothic" w:eastAsia="맑은 고딕" w:cs="Malgun Gothic"/>';
+  function para(t,{size=24,bold=false,center=false,after=200,color=null}={}){
+    const runs=String(t).split('\n').map((line,i)=>(i?'<w:r><w:br/></w:r>':'')+
+      `<w:r><w:rPr>${FONT}${bold?'<w:b/>':''}${color?`<w:color w:val="${color}"/>`:''}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr><w:t xml:space="preserve">${esc(line)}</w:t></w:r>`).join('');
+    return `<w:p><w:pPr>${center?'<w:jc w:val="center"/>':''}<w:spacing w:after="${after}" w:line="360" w:lineRule="auto"/></w:pPr>${runs}</w:p>`;
+  }
+  async function buildDocx(){
+    const t=title.value.trim()||'숙제';
+    const d=new Date();
+    const dateStr=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+    const paras=text.value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    const body=[para(t,{size:36,bold:true,center:true,after:120}), para(dateStr,{size:20,center:true,after:360,color:'777777'}),
+      ...paras.map(p=>para(p))].join('');
+    const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1701" w:right="1440" w:bottom="1440" w:left="1440" w:header="851" w:footer="992" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+    const zip=new JSZip();
+    zip.file('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+    zip.file('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+    zip.file('word/document.xml',doc);
+    return {blob:await zip.generateAsync({type:'blob'}), name:t};
+  }
+  docxBtn.addEventListener('click',async()=>{
+    if(!text.value.trim()){ say('저장할 글이 아직 없어요.','err'); return; }
+    if(!window.JSZip){ say('인터넷 연결을 확인하고 새로고침해 주세요. 그동안은 “글 복사”로 옮길 수 있어요.','err'); return; }
+    if(recognizing) stopRec();
+    docxBtn.disabled=true;
+    try{
+      const {blob,name}=await buildDocx();
+      const safe=name.replace(/[\\/:*?"<>|]/g,'').slice(0,60)||'숙제';
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download=`${safe}.docx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      say('워드 파일을 저장했어요. “내 파일 → 다운로드”에서 열 수 있어요.','ok');
+    }catch(e){ say('파일을 만들지 못했어요. “글 복사”로 옮겨 주세요.','err'); }
+    finally{ docxBtn.disabled=false; }
+  });
+
+  copyBtn.addEventListener('click',async()=>{
+    const all=(title.value.trim()?title.value.trim()+'\n\n':'')+text.value;
+    try{ await navigator.clipboard.writeText(all); say('복사했어요. 원하는 곳에 붙여 넣으세요.','ok'); }
+    catch(_){ text.select(); say('글을 선택해 뒀어요. Ctrl+C(또는 길게 눌러 복사)로 복사하세요.'); }
+  });
+
+  clearBtn.addEventListener('click',()=>{
+    if(text.value.trim() && !confirm('지금 글을 지우고 새로 쓸까요?')) return;
+    if(recognizing) stopRec();
+    text.value=''; title.value=''; beforePolish=null; undoBtn.classList.add('hidden');
+    updateCount(); save(); say('');
+  });
+})();
+</script>
+</body>
+</html>
